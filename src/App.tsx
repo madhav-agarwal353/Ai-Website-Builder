@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import './App.css'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
 import Pricing from './pages/Pricing'
 import Projects from './pages/Projects'
@@ -10,11 +10,18 @@ import Community from './pages/Community'
 import View from './pages/View'
 import Navbar from './components/Navbar'
 function App() {
+  const { pathname } = useLocation();
+  const hideNavbar = pathname.startsWith('/projects/')
+    && pathname !== '/projects' ||
+    pathname.startsWith('/view/') ||
+    pathname.startsWith('/preview/');
+
 
   return (
-    <section className="bg-gray-900">
+
+    <section className="bg-gray-900 purpple-scrollbar">
       <main className="  bg-[url('https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/hero/bg-gradient-2.png')] bg-cover text-center text-sm text-white max-md:px-4">
-        <Navbar />
+        {!hideNavbar && <Navbar />}
         <Routes>
           <Route path='/' element={<Home />} />
           <Route path='/pricing' element={<Pricing />} />
@@ -24,7 +31,6 @@ function App() {
           <Route path='/preview/:id/:versionId' element={<Preview />} />
           <Route path='/community' element={<Community />} />
           <Route path='/view/:id' element={<View />} />
-
         </Routes>
       </main>
     </section >

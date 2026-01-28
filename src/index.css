@@ -1,1 +1,41 @@
 @import "tailwindcss";
+
+.no-scrollbar::webkit-scrollbar {
+    display: none;
+}
+
+.purpple-scrollbar {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    /* Firefox */
+    scrollbar-color: #7c3aed transparent;
+    /* purple-600 */
+}
+
+/* Chrome / Edge / Safari */
+.purpple-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.purpple-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.purpple-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg,
+            #6d28d9,
+            /* purple-700 */
+            #4c1d95
+            /* purple-900 */
+        );
+    border-radius: 9999px;
+}
+
+.purpple-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg,
+            #7c3aed,
+            /* purple-600 */
+            #5b21b6
+            /* purple-800 */
+        );
+}
