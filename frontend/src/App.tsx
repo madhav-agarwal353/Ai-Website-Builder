@@ -9,6 +9,9 @@ import Preview from './pages/Preview'
 import Community from './pages/Community'
 import View from './pages/View'
 import Navbar from './components/Navbar'
+import { Toaster } from "@/components/ui/sonner"
+import AuthPage from './pages/auth/AuthPage'
+import AccountSetting from "./pages/AccountSetting"
 function App() {
   const { pathname } = useLocation();
   const hideNavbar = pathname.startsWith('/projects/')
@@ -21,6 +24,7 @@ function App() {
 
     <section className="bg-gray-900 purpple-scrollbar">
       <main className="  bg-[url('https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/hero/bg-gradient-2.png')] bg-cover text-center text-sm text-white max-md:px-4">
+        <Toaster />
         {!hideNavbar && <Navbar />}
         <Routes>
           <Route path='/' element={<Home />} />
@@ -31,6 +35,8 @@ function App() {
           <Route path='/preview/:projectId/:versionId' element={<Preview />} />
           <Route path='/community' element={<Community />} />
           <Route path='/view/:id' element={<View />} />
+          <Route path="/auth/:pathname" element={<AuthPage />} />
+          <Route path='/account/settings' element={<AccountSetting />} />
         </Routes>
       </main>
     </section >
