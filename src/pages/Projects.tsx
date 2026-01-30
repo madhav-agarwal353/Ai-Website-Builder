@@ -6,6 +6,7 @@ import { Download, EyeClosed, EyeOffIcon, FullscreenIcon, Laptop, Loader2Icon, M
 import image from '../../public/favicon.png'
 import Sidebar from '../components/Sidebar';
 import { type ProjectPreviewRef, ProjectPreview } from '../components/ProjectPreview';
+import Loader from '../components/Loader'
 // const DUMMY_PROJECTS: Project[] = [
 //   {
 //     id: "proj_1",
@@ -300,7 +301,18 @@ const Projects = () => {
   }
 
   const downloadCode = async () => {
-
+    const code = previewRef.current?.getCode() || project?.current_code;
+    if (!code) {
+      if (isGenerate)
+        return
+      return
+    }
+    const element = document.createElement('a');
+    const file = new Blob([code], { type: "text/html" });
+    element.href = URL.createObjectURL(file);
+    element.download = "index.html"
+    document.body.appendChild(element);
+    element.click();
   }
   const togglePublish = async () => {
 
@@ -446,11 +458,15 @@ const Projects = () => {
                 setProject={(p) => setproject(p)} isGenerate={isGenerate}
                 setisGenerate={(p) => setisGenerate(p)}
               />
-              <div className='flex-1 h-full'>
-                <ProjectPreview ref={previewRef} project={project}
-                  isGenerate={isGenerate} device={device}
-                />
-              </div>
+              {isGenerate ? (
+                <Loader />
+              ) : (
+                < div className='flex-1 h-full'>
+                  <ProjectPreview ref={previewRef} project={project}
+                    isGenerate={isGenerate} device={device}
+                  />
+                </div>
+              )}
             </div>
           </div>
         ) : (

@@ -1,5 +1,5 @@
 import { XIcon } from 'lucide-react';
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 
 interface EditorPanelProps {
     selectedElement: {
@@ -19,52 +19,161 @@ interface EditorPanelProps {
 }
 
 const EditorPanel = ({ selectedElement, onUpdate, onClose }: EditorPanelProps) => {
-
     const [values, setValues] = useState(selectedElement);
 
     useEffect(() => {
-        setValues(selectedElement)
-    }, [selectedElement])
+        setValues(selectedElement);
+    }, [selectedElement]);
 
-    if (!selectedElement || !values)
-        return null;
-    const handleChange = async (field: string, value: string) => {
+    if (!selectedElement || !values) return null;
+
+    const handleChange = (field: 'text' | 'className', value: string) => {
         const newValues = { ...values, [field]: value };
-        if (field in values.styles) {
-            newValues.styles = { ...values.styles, [field]: value }
-        }
-        setValues(newValues)
+        setValues(newValues);
         onUpdate({ [field]: value });
-    }
+    };
+
+    const handleStyleChange = (styleName: string, value: string) => {
+        const newStyles = { ...values.styles, [styleName]: value };
+        setValues({ ...values, styles: newStyles });
+        onUpdate({ styles: { [styleName]: value } });
+    };
+
     return (
-        <div className=''>
-            <div>
-                <h3>Edit Element</h3>
-                <button onClick={onClose}>
-                    <XIcon />
+        <div className="fixed right-4 top-20 z-50 w-[360px] rounded-2xl
+            bg-white/10 backdrop-blur-xl border border-white/20
+            shadow-[0_8px_32px_rgba(0,0,0,0.25)]
+            text-white">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3
+                border-b border-white/20">
+                <h3 className="text-sm font-semibold tracking-wide">
+                    Edit Element
+                    <span className="ml-2 rounded-md bg-white/10 px-2 py-0.5 text-xs text-indigo-300">
+                        {values.tagName}
+                    </span>
+                </h3>
+
+                <button
+                    onClick={onClose}
+                    className="rounded-lg p-1 hover:bg-white/10 transition"
+                >
+                    <XIcon className="h-4 w-4" />
                 </button>
             </div>
-            <div>
-                <div>
-                    <label htmlFor="">
-                        Text Content
-                    </label>
-                    <textarea value={values.text} onChange={(e) => handleChange('text', e.target.value)} />
+
+            {/* Body */}
+            <div className="p-4 space-y-4 text-sm">
+                {/* Text */}
+                <div className="space-y-1">
+                    <label className="text-white/70">Text Content</label>
+                    <textarea
+                        className="w-full min-h-[60px] rounded-xl
+                            bg-white/10 backdrop-blur
+                            border border-white/20
+                            px-3 py-2
+                            placeholder-white/40
+                            focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        value={values.text}
+                        onChange={(e) => handleChange('text', e.target.value)}
+                    />
                 </div>
-                <div>
-                    <label htmlFor="">
-                        Class Name
-                    </label>
-                    <input type='text' value={values.className || ''} onChange={(e) => handleChange('className', e.target.value)} />
+
+                {/* Class */}
+                <div className="space-y-1">
+                    <label className="text-white/70">Class Name</label>
+                    <input
+                        type="text"
+                        className="w-full rounded-xl
+                            bg-white/10 backdrop-blur
+                            border border-white/20
+                            px-3 py-2
+                            focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        value={values.className || ''}
+                        onChange={(e) => handleChange('className', e.target.value)}
+                    />
                 </div>
-                <div className=''>
-                     <div>
-                        
-                     </div>
+
+                {/* Spacing */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                        <label className="text-white/70">Padding</label>
+                        <input
+                            type="text"
+                            className="w-full rounded-xl bg-white/10 backdrop-blur
+                                border border-white/20 px-3 py-2"
+                            value={values.styles.padding}
+                            onChange={(e) => handleStyleChange('padding', e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-white/70">Margin</label>
+                        <input
+                            type="text"
+                            className="w-full rounded-xl bg-white/10 backdrop-blur
+                                border border-white/20 px-3 py-2"
+                            value={values.styles.margin}
+                            onChange={(e) => handleStyleChange('margin', e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                {/* Font Size */}
+                <div className="space-y-1">
+                    <label className="text-white/70">Font Size</label>
+                    <input
+                        type="text"
+                        className="w-full rounded-xl bg-white/10 backdrop-blur
+                            border border-white/20 px-3 py-2"
+                        value={values.styles.fontSize}
+                        onChange={(e) => handleStyleChange('fontSize', e.target.value)}
+                    />
+                </div>
+
+                {/* Colors */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                        <label className="text-white/70">Background</label>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="color"
+                                className="h-9 w-10 rounded-lg border border-white/30 bg-transparent"
+                                value={
+                                    values.styles.backgroundColor === 'rgba(0,0,0,0)'
+                                        ? '#ffffff'
+                                        : values.styles.backgroundColor
+                                }
+                                onChange={(e) =>
+                                    handleStyleChange('backgroundColor', e.target.value)
+                                }
+                            />
+                            <span className="text-xs text-white/60 truncate">
+                                {values.styles.backgroundColor}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-white/70">Text Color</label>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="color"
+                                className="h-9 w-10 rounded-lg border border-white/30 bg-transparent"
+                                value={values.styles.color}
+                                onChange={(e) =>
+                                    handleStyleChange('color', e.target.value)
+                                }
+                            />
+                            <span className="text-xs text-white/60 truncate">
+                                {values.styles.color}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default EditorPanel
+export default EditorPanel;

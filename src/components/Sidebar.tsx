@@ -29,7 +29,7 @@ const Sidebar = ({
         setisGenerate(true);
         setTimeout(() => {
             setisGenerate(false);
-        }, 3000)
+        }, 100000)
     }
     useEffect(() => {
         if (messageRef.current) {

@@ -19,7 +19,7 @@ export default function Home() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-between h-screen mt-40">
+        <div className="flex flex-col items-center justify-between h-[calc(100vh-72px)] pt-40">
             {/* Hero Content */}
             <div className="flex w-full flex-col items-center justify-center">
                 <h1 className="text-4xl md:text-[40px]">

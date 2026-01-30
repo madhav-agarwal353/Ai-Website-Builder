@@ -58,7 +58,7 @@ const MyProjects = () => {
     }, [])
 
     return (
-        <div className="px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32 py-10 min-h-screen h-full">
+        <div className="px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32 py-10 min-h-[calc(100vh-72px)] h-full">
 
             {/* ✅ Header always visible */}
             <div className="flex items-center justify-between mb-12">

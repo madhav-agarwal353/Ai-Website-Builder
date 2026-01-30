@@ -27,8 +27,8 @@ function App() {
           <Route path='/pricing' element={<Pricing />} />
           <Route path='/projects/:projectId' element={<Projects />} />
           <Route path='/projects' element={<MyProjects />} />
-          <Route path='/preview/:id' element={<Preview />} />
-          <Route path='/preview/:id/:versionId' element={<Preview />} />
+          <Route path='/preview/:projectId' element={<Preview />} />
+          <Route path='/preview/:projectId/:versionId' element={<Preview />} />
           <Route path='/community' element={<Community />} />
           <Route path='/view/:id' element={<View />} />
         </Routes>

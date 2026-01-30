@@ -3,7 +3,7 @@ import { Check } from "lucide-react";
 
 const Pricing = () => {
   return (
-    <section className="relative overflow-hidden py-20 min-h-screen">
+    <section className="relative overflow-hidden py-20  h-[calc(100vh-72px)]">
       {/* Background blobs */}
       <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full blur-3xl opacity-20" />
       <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full blur-3xl opacity-20" />
