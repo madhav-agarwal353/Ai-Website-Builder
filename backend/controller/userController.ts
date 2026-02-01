@@ -153,9 +153,28 @@ Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3
             }
         })
 
-       await prisma.conversation.create
+        await prisma.conversation.create({
+            data: {
+                role: 'assistant',
+                content: `I have created your website! You can view the code.`,
+                projectId: project.id
+            }
+        })
 
+        await prisma.websiteProject.update({
+            where: { id: project.id },
+            data: {
+                current_code: code.replace(/```[a-z]*\n?/gi, '').replace(/```$/g, '').trim(),
+                current_version_index: version.id
+            }
+        })
     } catch (error: any) {
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                credits: { increment: 5 }
+            }
+        })
         console.log(error)
         res.status(500).json({ message: error.message })
     }
