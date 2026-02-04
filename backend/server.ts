@@ -4,6 +4,7 @@ import cors from 'cors';
 import { toNodeHandler } from "better-auth/node";
 import { auth } from './lib/auth.js';
 import userRouter from './routes/userRoutes.js';
+import projectRouter from './routes/projectRoutes.js';
 const app = express();
 const port = 3000;
 
@@ -18,8 +19,8 @@ app.use(express.json({ limit: '50mb' }));
 app.get('/', (req: Request, res: Response) => {
     res.send('Sender is Live!');
 })
-
 app.use('/api/user', userRouter);
+app.use('/api/project', projectRouter);
 
 app.listen(port, () => {
     console.log(port)
