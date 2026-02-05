@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react'
 import type { Message, Project, Version } from '../types'
 import { BotIcon, EyeIcon, Loader2Icon, SendIcon, UserIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { api } from '@/configs/axios'
+import { toast } from 'sonner'
+import { clear } from 'console'
 
 interface SideBarProps {
     isMenuOpen: boolean
@@ -21,16 +24,40 @@ const Sidebar = ({
     const messageRef = useRef<HTMLDivElement>(null)
     const [input, setinput] = useState<string>('')
 
+    const fetchProjects = async () => {
+        // logic intentionally unchanged
+    }
     const handleRollback = async (versionId: string) => {
         // logic intentionally unchanged
     }
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setisGenerate(true);
-        setTimeout(() => {
-            setisGenerate(false);
-        }, 100000)
+        let interval: number | undefined;
+        try {
+            setisGenerate(true)
+            interval = setInterval(async () => {
+                fetchProjects();
+            }, 10000)
+            const { data } = await api.post(`/api/user/changes/${project.id}`, {
+                message: input
+            })
+            fetchProjects();
+            toast.success('Changes applied successfully')
+            setinput('')
+            clearInterval(interval)
+            setisGenerate(false)
+        }
+        catch (error: any) {
+            console.error("Error generating response:", error)
+            setisGenerate(false)
+            toast.error(error?.response?.data?.error || 'Failed to generate response')
+            clearInterval(interval)
+
+        }
     }
+
+
     useEffect(() => {
         if (messageRef.current) {
             messageRef.current.scrollIntoView({ behavior: 'smooth' })

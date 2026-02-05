@@ -57,7 +57,6 @@ export const createUserProject = async (req: Request, res: Response) => {
                 credits: { decrement: 5 }
             }
         })
-        res.json({ projectId: project.id })
 
         //enhance
         const enhance_prompt_response = await openai.chat.completions.create({
@@ -108,7 +107,8 @@ Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3
         })
 
         const code_generate_response = await openai.chat.completions.create({
-            model: "z-ai/glm-4.5-air:free",
+            // model: "z-ai/glm-4.5-air:free",
+            model: "upstage/solar-pro-3:free",
             messages: [{
                 role: 'system',
                 content: `You are an expert web developer. Create a complete, production-ready, single-page website based on this request: "${enhance_prompt}"
@@ -143,7 +143,7 @@ Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3
 
 
         const code = code_generate_response.choices[0].message.content || '';
-
+        
         //create version
         const version = await prisma.version.create({
             data: {
@@ -168,6 +168,7 @@ Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3
                 current_version_index: version.id
             }
         })
+        res.json({ projectId: project.id })
     } catch (error: any) {
         await prisma.user.update({
             where: { id: userId },

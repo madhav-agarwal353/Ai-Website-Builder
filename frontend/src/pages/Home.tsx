@@ -1,22 +1,42 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import { Loader2Icon } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
+import { api } from "@/configs/axios";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
+    const navigate = useNavigate();
+    const { data: session } = authClient.useSession();
     const [prompt, setPrompt] = useState<string>("");
     const [loading, setLoading] = useState(false);
     const handlePromptClick = (text: string): void => {
         setPrompt(text);
     };
 
-    const handleSubmit = (): void => {
-        if (!prompt.trim()) return;
-        setLoading(true);
-        //api
-        setTimeout(() => {
+    const handleSubmit = async () => {
+        try {
+            if (!session?.user) {
+                toast.error('Please sign in to create a project');
+                return;
+            }
+            if (prompt.trim().length === 0) {
+                toast.error('Please enter a prompt');
+                return;
+            }
+            setLoading(true);
+            const { data } = await api.post('/api/user/project', { initial_prompt: prompt });
             setLoading(false);
-        }, 3000)
-    };
+            console.log("Project created:", data);
+            navigate(`/projects/${data.projectId}`);
+        }
+        catch (error) {
+            console.error("Error creating project:", error);
+            toast.error('Failed to create project');
+            setLoading(false);
+        };
+    }
 
     return (
         <div className="flex flex-col items-center justify-between h-[calc(100vh-72px)] pt-40">

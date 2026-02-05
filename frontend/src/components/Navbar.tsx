@@ -1,18 +1,37 @@
 import { authClient } from '@/lib/auth-client';
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { UserButton } from "@daveyplate/better-auth-ui";
 import image from "../../public/favicon.png"
+import { api } from '@/configs/axios';
+import { toast } from 'sonner';
 const Navbar = () => {
     const [menuOpen, setMenuOpen] = useState(false);
+    const [credit, setCredit] = useState(0);
     const navigate = useNavigate();
     const { data: session } = authClient.useSession();
+    const getCredit = async () => {
+        try {
+            const { data } = await api.get('/api/user/credits');
+            setCredit(data.credits);
+        } catch (error: any) {
+            toast.error('Failed to fetch credit');
+            console.error('Error fetching credit:', error);
+        }
+    }
+    useEffect(() => {
+        if (session?.user) {
+            getCredit();
+        }
+    }, [session, credit]);
+
+
 
     return (
         <nav className="flex w-full items-center justify-between py-4 md:px-16 lg:px-24 xl:px-32 z-50 sticky">
             <a href="/" aria-label="PrebuiltUI">
-                <img src={image} alt="" className='h-[72px]'/>
+                <img src={image} alt="" className='h-[72px]' />
             </a>
 
             {/* Menu */}
@@ -35,7 +54,11 @@ const Navbar = () => {
             {!session?.user ? (<button className="hidden rounded-full border border-gray-600 bg-white px-6 py-2 text-black transition hover:bg-gray-200 active:scale-95 md:block" onClick={() => navigate('/auth/signin')}>
                 Get Started
             </button>) : (
-                <UserButton size='icon' className='rounded-full bg-white px-6 py-2 text-black transition hover:bg-gray-200 active:scale-95' />
+                <>
+                    <button
+                        className='text-white px-4 py-2 bg-gray-600 backdrop-blur-sm rounded-2xl'>Credits : <span>{credit}</span></button>
+                    <UserButton size='icon' className='rounded-full bg-white px-6 py-2 text-black transition hover:bg-gray-200 active:scale-95' />
+                </>
             )
             }
             <button
