@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { Project } from '../types';
 import { Loader2Icon } from 'lucide-react';
 import EditorPanel from './EditorPanel';

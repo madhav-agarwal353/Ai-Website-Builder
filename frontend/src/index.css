@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @import "@daveyplate/better-auth-ui/css";
-.no-scrollbar::webkit-scrollbar {
-    display: none;
-}
+
 
 .purpple-scrollbar {
     overflow-y: auto;

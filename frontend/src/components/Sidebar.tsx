@@ -4,7 +4,6 @@ import { BotIcon, EyeIcon, Loader2Icon, SendIcon, UserIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '@/configs/axios'
 import { toast } from 'sonner'
-import { authClient } from '@/lib/auth-client'
 
 interface SideBarProps {
     isMenuOpen: boolean
@@ -23,7 +22,6 @@ const Sidebar = ({
 }: SideBarProps) => {
     const messageRef = useRef<HTMLDivElement>(null)
     const [input, setinput] = useState<string>('')
-    const { data: session } = authClient.useSession();
     const handleRollback = async (versionId: string) => {
         try {
             const confirm = window.confirm('Are you sure you want to rollback to this version? This action cannot be undone.')

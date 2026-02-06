@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { Project } from '../types';
 import { useState } from 'react';

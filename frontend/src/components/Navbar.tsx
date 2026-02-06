@@ -1,7 +1,7 @@
 import { authClient } from '@/lib/auth-client';
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { UserButton } from "@daveyplate/better-auth-ui";
 import image from "../../public/favicon.png"
 import { api } from '@/configs/axios';

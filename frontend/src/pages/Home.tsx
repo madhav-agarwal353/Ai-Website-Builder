@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Navbar from "../components/Navbar";
 import { Loader2Icon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
