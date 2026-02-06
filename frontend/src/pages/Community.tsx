@@ -2,47 +2,24 @@ import React, { useEffect, useState } from 'react'
 import type { Project } from '../types'
 import { Loader2Icon, PlusIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { api } from '@/configs/axios'
 
 const Community = () => {
   const [loading, setLoading] = useState(false)
-  const [projects, setProjects] = useState<Project[]>([{
-    id: '1',
-    name: 'AI Portfolio Website',
-    initial_prompt: 'Create a modern portfolio website with AI-themed design and animations.',
-    current_code: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    createdAt: '2025-01-10T12:30:00Z',
-    updatedAt: '2025-01-12T14:00:00Z',
-    userId: 'user_123',
-
-    conversation: [],
-    versions: [],
-    current_version_index: '0',
-  },
-  {
-    id: '2',
-    name: 'SaaS Landing Page',
-    initial_prompt: 'Build a SaaS landing page with pricing, testimonials, and CTA.',
-    current_code: '',
-    createdAt: '2025-01-05T09:15:00Z',
-    updatedAt: '2025-01-05T09:15:00Z',
-    userId: 'user_123',
-
-    conversation: [],
-    versions: [],
-    current_version_index: '0',
-  },])
+  const [projects, setProjects] = useState<Project[]>([])
   const navigate = useNavigate();
   const fetchProjects = async () => {
     try {
       setLoading(true)
-      // fetch projects here
+      const projects = await api.get('/api/published');
+      console.log(projects.data);
+      setProjects(projects.data);
     } catch (error) {
       console.error(error)
     } finally {
       setLoading(false)
     }
   }
-
   useEffect(() => {
     fetchProjects()
   }, [])

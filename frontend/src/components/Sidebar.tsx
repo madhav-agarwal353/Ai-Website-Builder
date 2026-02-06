@@ -4,7 +4,7 @@ import { BotIcon, EyeIcon, Loader2Icon, SendIcon, UserIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '@/configs/axios'
 import { toast } from 'sonner'
-import { clear } from 'console'
+import { authClient } from '@/lib/auth-client'
 
 interface SideBarProps {
     isMenuOpen: boolean
@@ -23,37 +23,86 @@ const Sidebar = ({
 }: SideBarProps) => {
     const messageRef = useRef<HTMLDivElement>(null)
     const [input, setinput] = useState<string>('')
-
-    const fetchProjects = async () => {
-        // logic intentionally unchanged
-    }
+    const { data: session } = authClient.useSession();
     const handleRollback = async (versionId: string) => {
-        // logic intentionally unchanged
+        try {
+            const confirm = window.confirm('Are you sure you want to rollback to this version? This action cannot be undone.')
+            if (!confirm) return;
+            const { data } = await api.post(`/api/rollback/${project.id}/${versionId}`)
+            const { data: data2 } = await api.get(`/api/user/project/${project.id}`)
+            toast.success('Rollback successful')
+            console.log('Rollback successful:', data)
+            setProject(data2.project)
+            setisGenerate(false)
+        } catch (error) {
+            toast.error('Failed to rollback version')
+            console.error('Error rolling back version:', error)
+        }
     }
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        setisGenerate(true);
-        let interval: number | undefined;
+        if (!input.trim()) return;
+
+        const previousVersionCount = project.versions.length;
+        let attempts = 0
+        let interval: ReturnType<typeof setInterval> | null = null
+
         try {
             setisGenerate(true)
-            interval = setInterval(async () => {
-                fetchProjects();
-            }, 10000)
-            const { data } = await api.post(`/api/user/changes/${project.id}`, {
-                message: input
-            })
-            fetchProjects();
-            toast.success('Changes applied successfully')
-            setinput('')
-            clearInterval(interval)
-            setisGenerate(false)
-        }
-        catch (error: any) {
-            console.error("Error generating response:", error)
-            setisGenerate(false)
-            toast.error(error?.response?.data?.error || 'Failed to generate response')
-            clearInterval(interval)
 
+            await api.post(`/api/changes/${project.id}`, {
+                message: input,
+            })
+
+            setinput('')
+
+            interval = setInterval(async () => {
+                try {
+                    attempts++
+
+                    const { data } = await api.get(`/api/user/project/${project.id}`)
+                    const updatedProject = data.project
+
+                    // ✅ ONLY stop when NEW CODE is created
+                    const current_version_index = updatedProject.versions.length
+                    if (current_version_index > previousVersionCount) {
+                        setProject(updatedProject)
+                        setisGenerate(false)
+                        if (interval) {
+                            clearInterval(interval)
+                            interval = null
+                        }
+                        return
+                    }
+                    if (attempts >= 50) {
+                        toast.error('Code generation is taking too long')
+                        setisGenerate(false)
+
+                        if (interval) {
+                            clearInterval(interval)
+                            interval = null
+                        }
+                    }
+                } catch (err) {
+                    console.error(err)
+                    toast.error('Failed to check generation status')
+                    setisGenerate(false)
+
+                    if (interval) {
+                        clearInterval(interval)
+                        interval = null
+                    }
+                }
+            }, 10000)
+        } catch (error: any) {
+            console.error('Error generating response:', error)
+            toast.error(error?.response?.data?.error || 'Failed to generate response')
+            setisGenerate(false)
+
+            if (interval) {
+                clearInterval(interval)
+                interval = null
+            }
         }
     }
 
@@ -147,7 +196,7 @@ const Sidebar = ({
 
                                         <Link
                                             target="_"
-                                            to={`/preiview/${project.id}/${ver.id}`}
+                                            to={`/preview/${project.id}/${ver.id}`}
                                             className="text-gray-400 hover:text-white transition"
                                         >
                                             <EyeIcon className="size-4" />

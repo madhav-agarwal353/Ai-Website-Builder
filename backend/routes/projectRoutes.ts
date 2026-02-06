@@ -8,7 +8,7 @@ projectRouter.post(
     "/changes/:projectId", protect, makeChanges);
 projectRouter.put(
     "/save/:projectId", protect, saveProject);
-projectRouter.get(
+projectRouter.post(
     "/rollback/:projectId/:versionId", protect, rollbacktoVersion);
 projectRouter.delete(
     "/:projectId", protect, deleteProject);
@@ -16,7 +16,7 @@ projectRouter.get(
     "/preview/:projectId", protect, getProjectPreview);
 projectRouter.get(
     "/published", getpublishProjects);
-projectRouter.get(
+projectRouter.put(
     "/published/:projectId", protect, publishProject);;
 
 

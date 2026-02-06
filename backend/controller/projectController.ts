@@ -6,6 +6,7 @@ export const makeChanges = async (req: Request, res: Response) => {
     const userId = req.userId;
     try {
         const projectId = req.params.projectId as string;
+        console.log(projectId);
         const { message } = req.body;
 
         const user = await prisma.user.findUnique({
@@ -42,7 +43,7 @@ export const makeChanges = async (req: Request, res: Response) => {
         });
         //enhnace ypur promt
         const promptEnhnaceResponse = await openai.chat.completions.create({
-            model: "z-ai/glm-4.5-air:free",
+            model: "upstage/solar-pro-3:free",
             messages: [
                 {
                     role: "system",
@@ -130,6 +131,7 @@ Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3
             },
         });
         res.json({ message: "Website updated successfully" });
+
     } catch (error: any) {
         await prisma.user.update({
             where: { id: userId },
@@ -147,7 +149,7 @@ export const rollbacktoVersion = async (req: Request, res: Response) => {
             return res.status(401).json({ error: "Unauthorized" });
         }
         const projectId = req.params.projectId as string;
-        const versionId = req.body.versionId;
+        const versionId = req.params.versionId as string;
         const project = await prisma.websiteProject.findUnique({
             where: { id: projectId },
             include: { versions: true },
@@ -238,10 +240,14 @@ export const publishProject = async (req: Request, res: Response) => {
         const project = await prisma.websiteProject.findFirst({
             where: { id: projectId, userId },
         });
-        if (!project || project.isPublished === false || !project?.current_code) {
+        if (!project || !project?.current_code) {
             return res.status(404).json({ error: "Project not found" });
         }
-        res.json({ code: project.current_code });
+        await prisma.websiteProject.update({
+            where: { id: projectId, userId },
+            data: { isPublished: !project.isPublished },
+        });
+        res.json({ message: project.isPublished ? "Project unpublished successfully" : "Project published successfully" });
     } catch (error: any) {
         console.error("Error publishing project:", error);
         res.status(500).json({ error: "Failed to publish project" });

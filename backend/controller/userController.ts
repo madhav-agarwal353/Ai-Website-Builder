@@ -57,7 +57,7 @@ export const createUserProject = async (req: Request, res: Response) => {
                 credits: { decrement: 5 }
             }
         })
-
+        res.json({ projectId: project.id })
         //enhance
         const enhance_prompt_response = await openai.chat.completions.create({
             model: "z-ai/glm-4.5-air:free",
@@ -143,7 +143,7 @@ Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3
 
 
         const code = code_generate_response.choices[0].message.content || '';
-        
+
         //create version
         const version = await prisma.version.create({
             data: {
@@ -168,7 +168,7 @@ Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3
                 current_version_index: version.id
             }
         })
-        res.json({ projectId: project.id })
+
     } catch (error: any) {
         await prisma.user.update({
             where: { id: userId },
@@ -254,7 +254,7 @@ export const togglepublish = async (req: Request, res: Response) => {
             where: { id: projectId },
             data: { isPublished: !project.isPublished }
         })
-        res.json({ message : project.isPublished ? 'project unpublished' : 'project published' })
+        res.json({ message: project.isPublished ? 'project unpublished' : 'project published' })
     } catch (error: any) {
         console.log(error)
         res.status(500).json({ message: error.message })

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import type { Project } from '../types'
 import { Loader2Icon, PlusIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { api } from '@/configs/axios'
 
 const MyProjects = () => {
     const [loading, setLoading] = useState(false)
@@ -10,42 +11,19 @@ const MyProjects = () => {
         y: number
         projectId: string
     } | null>(null)
+    const [projects, setProjects] = useState<Project[]>([])
     const deleteProjectHandler = (id: string) => {
         setProjects((prev) => prev.filter((project) => project.id !== id));
         setContextMenu(null);
         console.log("Deleted project:", id);
     };
-    const [projects, setProjects] = useState<Project[]>([{
-        id: '1',
-        name: 'AI Portfolio Website',
-        initial_prompt: 'Create a modern portfolio website with AI-themed design and animations.',
-        current_code: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        createdAt: '2025-01-10T12:30:00Z',
-        updatedAt: '2025-01-12T14:00:00Z',
-        userId: 'user_123',
-
-        conversation: [],
-        versions: [],
-        current_version_index: '0',
-    },
-    {
-        id: '2',
-        name: 'SaaS Landing Page',
-        initial_prompt: 'Build a SaaS landing page with pricing, testimonials, and CTA.',
-        current_code: '',
-        createdAt: '2025-01-05T09:15:00Z',
-        updatedAt: '2025-01-05T09:15:00Z',
-        userId: 'user_123',
-
-        conversation: [],
-        versions: [],
-        current_version_index: '0',
-    },])
     const navigate = useNavigate();
     const fetchProjects = async () => {
         try {
             setLoading(true)
-            // fetch projects here
+            const response = await api.get('/api/user/projects')
+            console.log(response);
+            setProjects(response.data.projects)
         } catch (error) {
             console.error(error)
         } finally {

@@ -20,7 +20,7 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Sender is Live!');
 })
 app.use('/api/user', userRouter);
-app.use('/api/project', projectRouter);
+app.use('/api', projectRouter);
 
 app.listen(port, () => {
     console.log(port)
