@@ -167,7 +167,11 @@ const Projects = () => {
     if (!projectId) return;
     try {
       setisSaving(true);
-      await api.put(`/api/save/${projectId}`);
+      await api.put(`/api/save/${projectId}`,
+        {
+          code: project?.current_code
+        }
+      );
       setisSaving(false);
       toast.success("Project saved successfully")
     }
