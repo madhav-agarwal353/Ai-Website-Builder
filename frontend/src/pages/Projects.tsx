@@ -2,7 +2,19 @@ import { useEffect, useRef } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { Project } from '../types';
 import { useState } from 'react';
-import { Download, EyeClosed, EyeOffIcon, FullscreenIcon, Laptop, Loader2Icon, MessageSquareIcon, SaveIcon, SmartphoneIcon, TabletSmartphoneIcon, XIcon } from 'lucide-react';
+import {
+  Download,
+  EyeClosed,
+  EyeOffIcon,
+  FullscreenIcon,
+  Laptop,
+  Loader2Icon,
+  MessageSquareIcon,
+  SaveIcon,
+  SmartphoneIcon,
+  TabletSmartphoneIcon,
+  XIcon,
+} from 'lucide-react';
 import image from '../../public/favicon.png'
 import Sidebar from '../components/Sidebar';
 import { type ProjectPreviewRef, ProjectPreview } from '../components/ProjectPreview';
@@ -14,32 +26,145 @@ import { authClient } from '@/lib/auth-client';
 
 const Projects = () => {
   const [publish, setPublish] = useState("disabled");
-  const { projectId } = useParams();
+  const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { data: session, isPending } = authClient.useSession();
   const [project, setproject] = useState<Project | null>(null)
-  const [loading, setloading] = useState(true)
-  const [isGenerate, setisGenerate] = useState(false)
+  const [loading, setloading] = useState(false)
+
+  // split generation states
+  const [isInitialGenerating, setIsInitialGenerating] = useState(false)
+  const [isUpgrading, setIsUpgrading] = useState(false)
+
   const [device, setDevice] = useState<'phone' | 'tablet' | 'desktop'>("desktop")
   const [isSaving, setisSaving] = useState(false)
   const [isMenuOpen, setisMenuOpen] = useState(true)
   const previewRef = useRef<ProjectPreviewRef>(null)
 
-  const fetchProjects = async () => {
+  // hold interval id so we can clear it on unmount / replace it safely
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const fetchProjects = async ({ silent = false } = {}) => {
+    const isFirstLoad = project === null
+
     try {
-      setloading(false);
-      const { data } = await api.get(`api/user/project/${projectId}`)
-      console.log(data);
-      setproject(data.project);
-      setisGenerate(data.project.current_code ? false : true);
-      setPublish(data.project.isPublished ? "published" : "unpublished");
-    }
-    catch (err: any) {
-      console.log(err)
-      toast.error("Failed to fetch project")
+      if (isFirstLoad && !silent) {
+        setloading(true)
+      }
+
+      const { data } = await api.get(`/api/user/project/${projectId}`)
+      setproject(data.project)
+    } finally {
+      if (isFirstLoad && !silent) {
+        setloading(false)
+      }
     }
   }
+
+
+  // generateCode: parent owns generation + polling
+  const generateCode = async (message: string) => {
+    if (!project) return;
+    if (isInitialGenerating || isUpgrading) {
+      // already generating — ignore extra calls
+      return;
+    }
+
+    // determine whether this is the first generation (no current_code) or an upgrade
+    const isFirstGeneration = !project.current_code;
+    if (isFirstGeneration) setIsInitialGenerating(true);
+    else setIsUpgrading(true);
+
+    const previousVersionCount = project.versions.length;
+    let attempts = 0;
+
+    try {
+      await api.post(`/api/changes/${project.id}`, { message });
+
+      // clear any existing interval (safety)
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+
+      intervalRef.current = setInterval(async () => {
+        try {
+          attempts++;
+
+          const { data } = await api.get(`/api/user/project/${project.id}`);
+          const updatedProject = data.project;
+
+          // stop only when a NEW version is present
+          if (updatedProject.versions.length > previousVersionCount) {
+            setproject(updatedProject);
+            setIsInitialGenerating(false);
+            setIsUpgrading(false);
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+            return;
+          }
+
+          if (attempts >= 50) { // timeout
+            toast.error('Code generation is taking too long')
+            setIsInitialGenerating(false)
+            setIsUpgrading(false)
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+          }
+        } catch (err) {
+          console.error(err)
+          toast.error('Failed to check generation status')
+          setIsInitialGenerating(false)
+          setIsUpgrading(false)
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+        }
+      }, 10000);
+    } catch (err: any) {
+      console.error('Error generating response:', err)
+      toast.error(err?.response?.data?.error || 'Failed to generate response')
+      setIsInitialGenerating(false)
+      setIsUpgrading(false)
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
+  }
+
+  // rollback: parent owns API call and updating project
+  const rollbackToVersion = async (versionId: string) => {
+    setloading(true)
+    if (!project) return;
+    try {
+      const confirmRollback = window.confirm('Are you sure you want to rollback to this version? This action cannot be undone.');
+      if (!confirmRollback) return;
+
+      await api.post(`/api/rollback/${project.id}/${versionId}`);
+
+      // refresh the project (you can optimize by using the response from rollback if it returns project)
+      const { data } = await api.get(`/api/user/project/${project.id}`);
+      setproject(data.project);
+      setIsInitialGenerating(false);
+      setIsUpgrading(false);
+      toast.success('Rollback successful');
+    } catch (err) {
+      console.error('Error rolling back version:', err);
+      toast.error('Failed to rollback version');
+    }
+    finally {
+      setloading(false);
+    }
+  }
+
   const saveProject = async () => {
+    if (!projectId) return;
     try {
       setisSaving(true);
       await api.put(`/api/save/${projectId}`);
@@ -48,15 +173,16 @@ const Projects = () => {
     }
     catch (err) {
       console.error("Error saving project:", err);
+      setisSaving(false);
       toast.error("Failed to save project")
     }
   }
+
   const downloadCode = async () => {
     const code = previewRef.current?.getCode() || project?.current_code;
     if (!code) {
-      if (isGenerate)
-        return
-      return
+      if (isInitialGenerating || isUpgrading) return;
+      return;
     }
     const element = document.createElement('a');
     const file = new Blob([code], { type: "text/html" });
@@ -65,7 +191,9 @@ const Projects = () => {
     document.body.appendChild(element);
     element.click();
   }
+
   const togglePublish = async () => {
+    if (!projectId) return;
     try {
       const { data } = await api.put(`/api/published/${projectId}`);
       setPublish(prev => prev === "published" ? "unpublished" : "published");
@@ -76,6 +204,7 @@ const Projects = () => {
       toast.error(`Failed to toggle project publish status`)
     }
   }
+
   useEffect(() => {
     if (session?.user) {
       fetchProjects();
@@ -84,15 +213,20 @@ const Projects = () => {
       navigate("/");
       toast.info("Please Log in")
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, isPending])
+
+  // cleanup on unmount: clear any polling interval
   useEffect(() => {
-    if (project && !project.current_code) {
-      const interval = setInterval(() => {
-        fetchProjects();
-      }, 10000)
-      return () => clearInterval(interval);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     }
-  }, [project])
+  }, [])
+
+  const isBusy = isInitialGenerating || isUpgrading;
 
   return (
     <div className='h-screen overflow-hidden'>
@@ -227,16 +361,21 @@ const Projects = () => {
             </div>
             <div className='flex-1 flex'>
               <Sidebar
-                isMenuOpen={isMenuOpen} project={project}
-                setProject={(p) => setproject(p)} isGenerate={isGenerate}
-                setisGenerate={(p) => setisGenerate(p)}
+                isMenuOpen={isMenuOpen}
+                project={project}
+                isBusy={isBusy}
+                onGenerate={generateCode}
+                onRollback={rollbackToVersion}
               />
-              {isGenerate ? (
+              {isInitialGenerating || isUpgrading ? (
                 <Loader />
               ) : (
-                < div className='flex-1 h-full'>
-                  <ProjectPreview ref={previewRef} project={project}
-                    isGenerate={isGenerate} device={device}
+                <div className='flex-1 h-full'>
+                  <ProjectPreview
+                    ref={previewRef}
+                    project={project}
+                    isGenerate={isUpgrading} // show upgrade state if you want streaming indicator inside preview
+                    device={device}
                   />
                 </div>
               )}
