@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma.js';
 import openai from "../config/openai.js";
+import { Version } from '../generated/prisma/client.js';
 
 export const makeChanges = async (req: Request, res: Response) => {
     const userId = req.userId;
@@ -157,7 +158,7 @@ export const rollbacktoVersion = async (req: Request, res: Response) => {
         if (!project) {
             return res.status(404).json({ error: "Project not found" });
         }
-        const version = project.versions.find(version => version.id === versionId);
+        const version = project.versions.find((version: Version) => version.id === versionId);
         if (!version) {
             return res.status(404).json({ error: "Version not found" });
         }
