@@ -23,7 +23,6 @@ import { api } from "@/configs/axios";
 import { toast } from 'sonner';
 import { authClient } from '@/lib/auth-client';
 
-
 const Projects = () => {
   const [publish, setPublish] = useState("disabled");
   const { projectId } = useParams<{ projectId: string }>();
@@ -39,6 +38,7 @@ const Projects = () => {
   const [device, setDevice] = useState<'phone' | 'tablet' | 'desktop'>("desktop")
   const [isSaving, setisSaving] = useState(false)
   const [isMenuOpen, setisMenuOpen] = useState(true)
+  const [isgenerating, setisgenerating] = useState(false)
   const previewRef = useRef<ProjectPreviewRef>(null)
 
   // hold interval id so we can clear it on unmount / replace it safely
@@ -51,8 +51,10 @@ const Projects = () => {
       if (isFirstLoad && !silent) {
         setloading(true)
       }
-
+      setisgenerating(true);
       const { data } = await api.get(`/api/user/project/${projectId}`)
+      if (project)
+        setisgenerating(data.project.current_code ? false : true) // if no current code, we must be generating the first version
       setproject(data.project)
     } finally {
       if (isFirstLoad && !silent) {
@@ -69,7 +71,7 @@ const Projects = () => {
       // already generating — ignore extra calls
       return;
     }
-
+    setisgenerating(true);
     // determine whether this is the first generation (no current_code) or an upgrade
     const isFirstGeneration = !project.current_code;
     if (isFirstGeneration) setIsInitialGenerating(true);
@@ -135,6 +137,9 @@ const Projects = () => {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
+    }
+    finally {
+      setisgenerating(false);
     }
   }
 
@@ -367,18 +372,18 @@ const Projects = () => {
               <Sidebar
                 isMenuOpen={isMenuOpen}
                 project={project}
-                isBusy={isBusy}
+                isBusy={isgenerating}
                 onGenerate={generateCode}
                 onRollback={rollbackToVersion}
               />
-              {isInitialGenerating || isUpgrading ? (
+              {isgenerating ? (
                 <Loader />
               ) : (
                 <div className='flex-1 h-full'>
                   <ProjectPreview
                     ref={previewRef}
                     project={project}
-                    isGenerate={isUpgrading} // show upgrade state if you want streaming indicator inside preview
+                    isGenerate={isgenerating} // show upgrade state if you want streaming indicator inside preview
                     device={device}
                   />
                 </div>
